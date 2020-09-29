@@ -47,7 +47,7 @@ func TestCompatiblePluginWithExactVersion(t *testing.T) {
 	expectedResult := []CompatibilityResult{
 		{"Test.pluginA", "1.1.0", true, "Plugin Test.pluginA@1.1.0 compatible with version 1.20.0"},
 	}
-	if got := ArePluginsCompatible("1.20.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
+	if got, _ := ResolvePluginCompatibility("1.20.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
 		t.Errorf("method() = %v, want %v", got, expectedResult)
 	}
 }
@@ -74,12 +74,12 @@ func TestCompatiblePluginWithMinorVersion(t *testing.T) {
 	expectedResult := []CompatibilityResult{
 		{"Test.pluginA", "1.1.0", true, "Plugin Test.pluginA@1.1.0 compatible with version 1.20.0"},
 	}
-	if got := ArePluginsCompatible("1.20.7", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
+	if got, _ := ResolvePluginCompatibility("1.20.7", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
 		t.Errorf("method() = %v, want %v", got, expectedResult)
 	}
 }
 
-func TestIncompatiblePluginWithoutConstrainForNewerSpinnakerVersion(t *testing.T) {
+func TestIncompatiblePluginWithoutConstraintForNewerSpinnakerVersion(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -101,12 +101,12 @@ func TestIncompatiblePluginWithoutConstrainForNewerSpinnakerVersion(t *testing.T
 	expectedResult := []CompatibilityResult{
 		{"Test.pluginA", "1.1.0", false, "No compatible Spinnaker versions found for Plugin Test.pluginA@1.1.0"},
 	}
-	if got := ArePluginsCompatible("1.23.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
+	if got, _ := ResolvePluginCompatibility("1.23.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
 		t.Errorf("method() = %v, want %v", got, expectedResult)
 	}
 }
 
-func TestIncompatiblePluginWithoutConstrainForOlderSpinnakerVersion(t *testing.T) {
+func TestIncompatiblePluginWithoutConstraintForOlderSpinnakerVersion(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -128,7 +128,7 @@ func TestIncompatiblePluginWithoutConstrainForOlderSpinnakerVersion(t *testing.T
 	expectedResult := []CompatibilityResult{
 		{"Test.pluginA", "1.1.0", false, "No compatible Spinnaker versions found for Plugin Test.pluginA@1.1.0"},
 	}
-	if got := ArePluginsCompatible("1.19.7", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
+	if got, _ := ResolvePluginCompatibility("1.19.7", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
 		t.Errorf("method() = %v, want %v", got, expectedResult)
 	}
 }
@@ -157,7 +157,7 @@ func TestMultiplePluginsWithCompatibleVersion(t *testing.T) {
 		{"Test.pluginA", "1.1.0", true, "Plugin Test.pluginA@1.1.0 compatible with version 1.21.1"},
 		{"Test.pluginB", "1.0.1", true, "Plugin Test.pluginB@1.0.1 compatible with version 1.21.0"},
 	}
-	if got := ArePluginsCompatible("1.21.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
+	if got, _ := ResolvePluginCompatibility("1.21.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
 		t.Errorf("method() = %v, want %v", got, expectedResult)
 	}
 }
@@ -186,7 +186,7 @@ func TestMultiplePluginsWithIncompatibleVersion(t *testing.T) {
 		{"Test.pluginA", "1.1.0", true, "Plugin Test.pluginA@1.1.0 compatible with version 1.20.0"},
 		{"Test.pluginB", "1.0.1", false, "No compatible Spinnaker versions found for Plugin Test.pluginB@1.0.1"},
 	}
-	if got := ArePluginsCompatible("1.20.9", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
+	if got, _ := ResolvePluginCompatibility("1.20.9", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
 		t.Errorf("method() = %v, want %v", got, expectedResult)
 	}
 }
@@ -211,9 +211,9 @@ func TestCompatiblePluginWhenCompatibilityMetadataIsMissing(t *testing.T) {
 		{"Test.pluginB", "1.0.0"},
 	}
 	expectedResult := []CompatibilityResult{
-		{"Test.pluginB", "1.0.0", true, "Plugin Test.pluginB@1.0.0 does not contain compatibility constrain"},
+		{"Test.pluginB", "1.0.0", true, "Plugin Test.pluginB@1.0.0 does not contain compatibility constraint"},
 	}
-	if got := ArePluginsCompatible("1.20.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
+	if got, _ := ResolvePluginCompatibility("1.20.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
 		t.Errorf("method() = %v, want %v", got, expectedResult)
 	}
 }
@@ -240,7 +240,7 @@ func TestCompatiblePluginWhenPluginDoesNotExist(t *testing.T) {
 	expectedResult := []CompatibilityResult{
 		{"Test.pluginC", "1.0.0", true, "No releases found for Test.pluginC"},
 	}
-	if got := ArePluginsCompatible("1.20.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
+	if got, _ := ResolvePluginCompatibility("1.20.0", plugins, repos); !reflect.DeepEqual(got, expectedResult) {
 		t.Errorf("method() = %v, want %v", got, expectedResult)
 	}
 }

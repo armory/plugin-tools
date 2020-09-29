@@ -46,14 +46,16 @@ type CompatibilityResult struct {
 	Reason        string
 }
 
-func ArePluginsCompatible(spinnakerVersion string, plugins []plugin, repo []string) []CompatibilityResult {
+func ResolvePluginCompatibility(spinnakerVersion string, plugins []plugin, repo []string) ([]CompatibilityResult, error) {
 	var result []CompatibilityResult
 	spinVersion, err := semver.Make(spinnakerVersion)
 	if err != nil {
-		log.Println(err)
-		return result
+		return nil, err
 	}
-	pluginsMetadata := getPluginMetadata(repo)
+	pluginsMetadata, err := getPluginMetadata(repo)
+	if err != nil {
+		return nil, err
+	}
 	for _, v := range plugins {
 		comp, err := getCompatibilityConstraint(v.Id, v.Version, pluginsMetadata)
 		if err != nil {
@@ -62,7 +64,7 @@ func ArePluginsCompatible(spinnakerVersion string, plugins []plugin, repo []stri
 			continue
 		}
 		if comp == nil {
-			message := fmt.Sprintf("Plugin %s@%s does not contain compatibility constrain", v.Id, v.Version)
+			message := fmt.Sprintf("Plugin %s@%s does not contain compatibility constraint", v.Id, v.Version)
 			log.Printf(message)
 			result = append(result, CompatibilityResult{v.Id, v.Version, true, message})
 			continue
@@ -75,7 +77,7 @@ func ArePluginsCompatible(spinnakerVersion string, plugins []plugin, repo []stri
 				log.Printf("%s in compatibility metadata is invalid", compSpinVersion)
 				continue
 			}
-			if spinVersion.Equals(compSpinVersion) || spinVersion.Minor == compSpinVersion.Minor {
+			if spinVersion.Equals(compSpinVersion) || spinVersion.Minor == compSpinVersion.Minor && spinVersion.Major == compSpinVersion.Major {
 				isCompatible = true
 				compatibleVersion = s
 				break
@@ -87,49 +89,51 @@ func ArePluginsCompatible(spinnakerVersion string, plugins []plugin, repo []stri
 			result = append(result, CompatibilityResult{v.Id, v.Version, false, fmt.Sprintf("No compatible Spinnaker versions found for Plugin %s@%s", v.Id, v.Version)})
 		}
 	}
-	return result
+	return result, nil
 }
 
-func getPluginMetadata(repositories []string) []pluginMetadata {
+func getPluginMetadata(repositories []string) ([]pluginMetadata, error) {
 	var allPluginsMetadata []pluginMetadata
 	for _, s := range repositories {
-		body := getExternalResource(s)
+		body, err := getExternalResource(s)
+		if err != nil {
+			return nil, err
+		}
 
 		//get list of repositories
 		var pf4jRepos []repository
 		jsonErr := json.Unmarshal(body, &pf4jRepos)
 		if jsonErr != nil {
-			log.Println(jsonErr)
-			return allPluginsMetadata
+			return nil, err
 		}
 
 		for _, v := range pf4jRepos {
-			b := getExternalResource(v.Url)
+			b, err := getExternalResource(v.Url)
+			if err != nil {
+				return nil, err
+			}
 			var metadata []pluginMetadata
 			jsonErr := json.Unmarshal(b, &metadata)
 			if jsonErr != nil {
-				log.Println(jsonErr)
-				continue
+				return nil, err
 			}
 			allPluginsMetadata = append(allPluginsMetadata, metadata...)
 		}
 	}
-	return allPluginsMetadata
+	return allPluginsMetadata, nil
 }
 
-func getExternalResource(url string) []byte {
+func getExternalResource(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Println(err)
-		return nil
+		return nil, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println(err)
-		return nil
+		return nil, err
 	}
-	return body
+	return body, nil
 }
 
 func getCompatibilityConstraint(pluginId string, pluginVersion string, metadata []pluginMetadata) (*platform, error) {
