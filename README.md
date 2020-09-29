@@ -16,10 +16,10 @@ import "github.com/armory/plugin-tools/pkg/validation"
 The only exposed function is:
 
 ```
-func ArePluginsCompatible(spinnakerVersion string, plugins []plugin, repos []string) []CompatibilityResult
+func ResolvePluginCompatibility(spinnakerVersion string, plugins []plugin, repos []string) ([]CompatibilityResult, error)
 ```
 
-This function return a list of `CompatibilityResult` with the verdict if a plugin is compatible with the given Spinnaker version.
+This function return a list of `CompatibilityResult` with the verdict if a plugin is compatible with the given Spinnaker version or and error if something goes wrong when validating.
 
 Here are the function arguments described:
 
