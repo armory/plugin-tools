@@ -9,6 +9,12 @@ import (
 	"net/http"
 )
 
+const (
+	OSSKind     string = "spinnaker"
+	ArmoryKind  string = "armory"
+	ServiceKind string = "service"
+)
+
 type repository struct {
 	Id  string `json:"id"`
 	Url string `json:"url"`
@@ -22,16 +28,13 @@ type pluginMetadata struct {
 }
 
 type release struct {
-	Version       string    `json:"version"`
-	Date          string    `json:"date"`
-	Requires      string    `json:"requires"`
-	Compatibility *platform `json:"compatibility"`
-	Hash          string    `json:"sha512sum"`
-	State         string    `json:"state"`
-	Url           string    `json:"url"`
-}
-type platform struct {
-	SpinnakerVersions []string `json:"spinnaker"`
+	Version       string                 `json:"version"`
+	Date          string                 `json:"date"`
+	Requires      string                 `json:"requires"`
+	Compatibility map[string]interface{} `json:"compatibility"`
+	Hash          string                 `json:"sha512sum"`
+	State         string                 `json:"state"`
+	Url           string                 `json:"url"`
 }
 
 type plugin struct {
@@ -46,9 +49,17 @@ type CompatibilityResult struct {
 	Reason        string
 }
 
-func ResolvePluginCompatibility(spinnakerVersion string, plugins []plugin, repo []string) ([]CompatibilityResult, error) {
+type SpinnakerVersion struct {
+	version     string
+	kind        string
+	serviceName string
+}
+
+func ResolvePluginCompatibility(spinnaker SpinnakerVersion, plugins []plugin, repo []string) ([]CompatibilityResult, error) {
 	var result []CompatibilityResult
-	spinVersion, err := semver.Make(spinnakerVersion)
+
+	//TODO: we need to figure it out how the version of individual service will be
+	spinVersion, err := semver.Make(spinnaker.version)
 	if err != nil {
 		return nil, err
 	}
@@ -69,17 +80,24 @@ func ResolvePluginCompatibility(spinnakerVersion string, plugins []plugin, repo 
 			result = append(result, CompatibilityResult{v.Id, v.Version, true, message})
 			continue
 		}
+		if comp[spinnaker.kind] == nil {
+			message := fmt.Sprintf("Plugin %s@%s does not contain compatibility constraint with name %s", v.Id, v.Version, spinnaker.kind)
+			log.Printf(message)
+			result = append(result, CompatibilityResult{v.Id, v.Version, true, message})
+			continue
+		}
 		isCompatible := false
 		compatibleVersion := ""
-		for _, s := range comp.SpinnakerVersions {
-			compSpinVersion, err := semver.Make(s)
+		for _, s := range comp[spinnaker.kind].([]interface{}) {
+			//TODO: needs support for individual service
+			compSpinVersion, err := semver.Make(s.(string))
 			if err != nil {
 				log.Printf("%s in compatibility metadata is invalid", compSpinVersion)
 				continue
 			}
 			if spinVersion.Equals(compSpinVersion) || spinVersion.Minor == compSpinVersion.Minor && spinVersion.Major == compSpinVersion.Major {
 				isCompatible = true
-				compatibleVersion = s
+				compatibleVersion = s.(string)
 				break
 			}
 		}
@@ -136,7 +154,7 @@ func getExternalResource(url string) ([]byte, error) {
 	return body, nil
 }
 
-func getCompatibilityConstraint(pluginId string, pluginVersion string, metadata []pluginMetadata) (*platform, error) {
+func getCompatibilityConstraint(pluginId string, pluginVersion string, metadata []pluginMetadata) (map[string]interface{}, error) {
 	var releases []release
 	for _, v := range metadata {
 		if v.PluginId == pluginId {
@@ -145,7 +163,7 @@ func getCompatibilityConstraint(pluginId string, pluginVersion string, metadata 
 		}
 	}
 	if len(releases) == 0 {
-		return &platform{}, fmt.Errorf("No releases found for %s", pluginId)
+		return make(map[string]interface{}), fmt.Errorf("No releases found for %s", pluginId)
 	}
 
 	for _, v := range releases {
@@ -153,5 +171,5 @@ func getCompatibilityConstraint(pluginId string, pluginVersion string, metadata 
 			return v.Compatibility, nil
 		}
 	}
-	return &platform{}, fmt.Errorf("Could not find version %s for plugin %s", pluginVersion, pluginId)
+	return make(map[string]interface{}), fmt.Errorf("Could not find version %s for plugin %s", pluginVersion, pluginId)
 }

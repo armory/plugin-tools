@@ -16,16 +16,26 @@ import "github.com/armory/plugin-tools/pkg/validation"
 The only exposed function is:
 
 ```
-func ResolvePluginCompatibility(spinnakerVersion string, plugins []plugin, repos []string) ([]CompatibilityResult, error)
+func ResolvePluginCompatibility(spinnaker SpinnakerVersion, plugins []plugin, repos []string) ([]CompatibilityResult, error)
 ```
 
 This function return a list of `CompatibilityResult` with the verdict if a plugin is compatible with the given Spinnaker version or and error if something goes wrong when validating.
 
 Here are the function arguments described:
 
-* `spinnakerVersion` This is the version that we want to know if the plugins are compatible.
-* `[]plugins` This is the list of plugins to test check compatibility.
+* `SpinnakerVersion` This is the schema for a Spinnaker platform.
+* `[]plugins` This is the list of plugins to check compatibility.
 * `[]repos` This is the list of p4fj URL that contains the plugin's metadata.
+
+The Spinnaker Version schema is composed by the SemVer of spinnaker, the kind of compatibility that we want to use and the service name.
+
+The available kinds of compatibility are the following:
+`spinnaker` for OSS.
+`armory` for Armory Spinnaker Distribution.
+`service` for Individual service compatibility.
+
+The serviceName field is only required when using `service` kind.
+
 
 All this information can be found in the Spinnaker configuration as shown bellow:
 ```yaml
