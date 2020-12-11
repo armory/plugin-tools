@@ -8,9 +8,17 @@ import (
 	"strings"
 )
 
+type Verdict string
+
+const (
+	Compatible    Verdict = "Compatible"
+	NotCompatible Verdict = "Not Compatible"
+	Unknown       Verdict = "Unknown"
+)
+
 type PluginCompatibilityValidator interface {
-	IsPluginCompatibleWithPlatform(platformVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (bool, error)
-	IsPluginCompatibleWithService(serviceName string, serviceVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (bool, error)
+	IsPluginCompatibleWithPlatform(platformVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (Verdict, error)
+	IsPluginCompatibleWithService(serviceName string, serviceVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (Verdict, error)
 }
 
 func NewAstrolabeValidator() PluginCompatibilityValidator {

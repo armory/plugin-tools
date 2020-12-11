@@ -7,7 +7,7 @@ import (
 
 type AstrolabeCompatibilityValidator struct{}
 
-func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithPlatform(platformVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (bool, error) {
+func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithPlatform(platformVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (Verdict, error) {
 	var metadata *CompatibilityMetadata
 	for _, e := range repos {
 		m, err := e.getCompatibilityMetadata(pluginId)
@@ -20,28 +20,28 @@ func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithPlatform(platfor
 	}
 
 	if metadata == nil {
-		return false, fmt.Errorf("compatibility metadata not found in repositories")
+		return Unknown, fmt.Errorf("compatibility metadata not found in repositories")
 	}
 
 	tests, err := metadata.getCompatibilityTests(pluginVersion)
 	if err != nil {
-		return false, err
+		return Unknown, err
 	}
 
 	for _, e := range tests {
 		if e.containsPlatformVersion(platformVersion) {
 			if e.Status == "success" {
-				return true, nil
+				return Compatible, nil
 			} else {
-				return false, nil
+				return NotCompatible, nil
 			}
 		}
 	}
 
-	return false, fmt.Errorf("could not find compatibility tests with platform: %s for plugin %s@%s", platformVersion, pluginId, pluginVersion)
+	return Unknown, fmt.Errorf("could not find compatibility tests with platform: %s for plugin %s@%s", platformVersion, pluginId, pluginVersion)
 }
 
-func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithService(serviceName string, serviceVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (bool, error) {
+func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithService(serviceName string, serviceVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (Verdict, error) {
 	var metadata *CompatibilityMetadata
 	for _, e := range repos {
 		m, err := e.getCompatibilityMetadata(pluginId)
@@ -54,23 +54,23 @@ func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithService(serviceN
 	}
 
 	if metadata == nil {
-		return false, fmt.Errorf("compatibility metadata not found in repositories")
+		return Unknown, fmt.Errorf("compatibility metadata not found in repositories")
 	}
 
 	tests, err := metadata.getCompatibilityTests(pluginVersion)
 	if err != nil {
-		return false, err
+		return Unknown, err
 	}
 
 	for _, e := range tests {
 		if e.ServiceName == serviceName && e.ServiceVersion == serviceVersion {
 			if e.Status == "success" {
-				return true, nil
+				return Compatible, nil
 			} else {
-				return false, nil
+				return NotCompatible, nil
 			}
 		}
 	}
 
-	return false, fmt.Errorf("could not find compatibility tests with service: %s version: %s for plugin %s@%s", serviceName, serviceVersion, pluginId, pluginVersion)
+	return Unknown, fmt.Errorf("could not find compatibility tests with service: %s version: %s for plugin %s@%s", serviceName, serviceVersion, pluginId, pluginVersion)
 }

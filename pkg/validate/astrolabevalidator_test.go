@@ -40,13 +40,12 @@ func TestCompatiblePluginWithPlatform(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-
-	isValid, err := v.IsPluginCompatibleWithPlatform("1.23.1", "Armory.Test", "1.0.0", repos)
+	verdict, err := v.IsPluginCompatibleWithPlatform("1.23.1", "Armory.Test", "1.0.0", repos)
 	if err != nil {
 		t.Errorf("method() return error: %s", err)
 	}
-	if !isValid {
-		t.Errorf("method() = %t but want = %t", isValid, true)
+	if verdict != Compatible {
+		t.Errorf("method() = %s but want = %s", verdict, Compatible)
 	}
 }
 
@@ -59,13 +58,13 @@ func TestIncompatiblePluginWithPlatform(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	isValid, err := v.IsPluginCompatibleWithPlatform("1.22.5", "Armory.Test", "1.0.0", repos)
+	verdict, err := v.IsPluginCompatibleWithPlatform("1.22.5", "Armory.Test", "1.0.0", repos)
 
 	if err != nil {
 		t.Errorf("method() return error: %s", err)
 	}
-	if isValid {
-		t.Errorf("method() = %t but want = %t", isValid, false)
+	if verdict != NotCompatible {
+		t.Errorf("method() = %s but want = %s", verdict, NotCompatible)
 	}
 }
 
@@ -78,13 +77,13 @@ func TestCompatiblePluginWithCustomPlatform(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	isValid, err := v.IsPluginCompatibleWithPlatform("2.22.1", "Armory.Test", "1.0.0", repos)
+	verdict, err := v.IsPluginCompatibleWithPlatform("2.22.1", "Armory.Test", "1.0.0", repos)
 
 	if err != nil {
 		t.Errorf("method() return error: %s", err)
 	}
-	if !isValid {
-		t.Errorf("method() = %t but want = %t", isValid, true)
+	if verdict != Compatible {
+		t.Errorf("method() = %s but want = %s", verdict, Compatible)
 	}
 }
 
@@ -97,13 +96,13 @@ func TestIncompatiblePluginWithCustomPlatform(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	isValid, err := v.IsPluginCompatibleWithPlatform("2.22.1", "Armory.Test", "0.1.7", repos)
+	verdict, err := v.IsPluginCompatibleWithPlatform("2.22.1", "Armory.Test", "0.1.7", repos)
 
 	if err != nil {
 		t.Errorf("method() return error: %s", err)
 	}
-	if isValid {
-		t.Errorf("method() = %t but want = %t", isValid, false)
+	if verdict != NotCompatible {
+		t.Errorf("method() = %s but want = %s", verdict, NotCompatible)
 	}
 }
 
@@ -116,8 +115,8 @@ func TestReturnErrorWithUnknownPlatform(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	if _, err := v.IsPluginCompatibleWithPlatform("fake-platform", "Armory.Test", "1.0.0", repos); err == nil {
-		t.Errorf("An error was expected")
+	if verdict, err := v.IsPluginCompatibleWithPlatform("fake-platform", "Armory.Test", "1.0.0", repos); err == nil || verdict != Unknown {
+		t.Errorf("An error was expected and method() = %s but want = %s", verdict, Unknown)
 	}
 }
 
@@ -129,8 +128,8 @@ func TestReturnErrorWhenMetadataIsMissing(t *testing.T) {
 		httpmock.NewStringResponder(404, ""))
 
 	v := NewAstrolabeValidator()
-	if _, err := v.IsPluginCompatibleWithPlatform("1.23.1", "Armory.Test", "1.0.0", repos); err == nil {
-		t.Errorf("An error was expected")
+	if verdict, err := v.IsPluginCompatibleWithPlatform("1.23.1", "Armory.Test", "1.0.0", repos); err == nil || verdict != Unknown {
+		t.Errorf("An error was expected and method() = %s but want = %s", verdict, Unknown)
 	}
 }
 
@@ -143,8 +142,8 @@ func TestReturnErrorWhenReleaseIsMissing(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	if _, err := v.IsPluginCompatibleWithPlatform("1.23.1", "Armory.Test", "2.0.0", repos); err == nil {
-		t.Errorf("An error was expected")
+	if verdict, err := v.IsPluginCompatibleWithPlatform("1.23.1", "Armory.Test", "2.0.0", repos); err == nil || verdict != Unknown {
+		t.Errorf("An error was expected and method() = %s but want = %s", verdict, Unknown)
 	}
 }
 
@@ -157,8 +156,8 @@ func TestReturnErrorWhenPlatformIsMissing(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	if _, err := v.IsPluginCompatibleWithPlatform("1.20.0", "Armory.Test", "1.0.0", repos); err == nil {
-		t.Errorf("An error was expected")
+	if verdict, err := v.IsPluginCompatibleWithPlatform("1.20.0", "Armory.Test", "1.0.0", repos); err == nil || verdict != Unknown {
+		t.Errorf("An error was expected and method() = %s but want = %s", verdict, Unknown)
 	}
 }
 
@@ -171,13 +170,13 @@ func TestCompatiblePluginWithService(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	isValid, err := v.IsPluginCompatibleWithService("orca", "5.0.0", "Armory.Test", "1.0.0", repos)
+	verdict, err := v.IsPluginCompatibleWithService("orca", "5.0.0", "Armory.Test", "1.0.0", repos)
 
 	if err != nil {
 		t.Errorf("method() return error: %s", err)
 	}
-	if !isValid {
-		t.Errorf("method() = %t but want = %t", isValid, true)
+	if verdict != Compatible {
+		t.Errorf("method() = %s but want = %s", verdict, Compatible)
 	}
 }
 
@@ -190,13 +189,13 @@ func TestIncompatiblePluginWithService(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	isValid, err := v.IsPluginCompatibleWithService("orca", "4.0.0", "Armory.Test", "1.0.0", repos)
+	verdict, err := v.IsPluginCompatibleWithService("orca", "4.0.0", "Armory.Test", "1.0.0", repos)
 
 	if err != nil {
 		t.Errorf("method() return error: %s", err)
 	}
-	if isValid {
-		t.Errorf("method() = %t but want = %t", isValid, false)
+	if verdict != NotCompatible {
+		t.Errorf("method() = %s but want = %s", verdict, Compatible)
 	}
 }
 
@@ -209,7 +208,7 @@ func TestReturnErrorWithUnknownService(t *testing.T) {
 		httpmock.NewBytesResponder(200, s))
 
 	v := NewAstrolabeValidator()
-	if _, err := v.IsPluginCompatibleWithService("fake-service", "fake-version", "Armory.Test", "1.0.0", repos); err == nil {
-		t.Errorf("An error was expected")
+	if verdict, err := v.IsPluginCompatibleWithService("fake-service", "fake-version", "Armory.Test", "1.0.0", repos); err == nil || verdict != Unknown {
+		t.Errorf("An error was expected and method() = %s but want = %s", verdict, Unknown)
 	}
 }
