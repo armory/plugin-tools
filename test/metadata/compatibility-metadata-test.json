@@ -1,0 +1,69 @@
+{
+  "id": "Armory.Test",
+  "releases": [
+    {
+      "version": "1.0.0",
+      "compatibility": [
+        {
+          "outcome": "success",
+          "platformVersions": [
+            "1.23.1",
+            "1.23.0"
+          ],
+          "service": "orca",
+          "version": "5.0.0"
+        },
+        {
+          "outcome": "failure",
+          "platformVersions": [
+            "1.22.5",
+            "1.22.4"
+          ],
+          "service": "orca",
+          "version": "4.0.0"
+        },
+        {
+          "outcome": "success",
+          "platformVersions": [
+            "2.22.2",
+            "2.22.1"
+          ],
+          "service": "orca",
+          "version": "4.0.0-armory"
+        }
+      ]
+    },
+    {
+      "version": "0.1.7",
+      "compatibility": [
+        {
+          "outcome": "failure",
+          "platformVersions": [
+            "1.23.1",
+            "1.23.0"
+          ],
+          "service": "orca",
+          "version": "5.0.0"
+        },
+        {
+          "outcome": "failure",
+          "platformVersions": [
+            "1.22.5",
+            "1.22.4"
+          ],
+          "service": "orca",
+          "version": "4.0.0"
+        },
+        {
+          "outcome": "failure",
+          "platformVersions": [
+            "2.22.2",
+            "2.22.1"
+          ],
+          "service": "orca",
+          "version": "4.0.0-armory"
+        }
+      ]
+    }
+  ]
+}
