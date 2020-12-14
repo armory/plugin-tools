@@ -28,17 +28,28 @@ func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithPlatform(platfor
 		return Unknown, err
 	}
 
+	//At the begin, we consider the plugin as unknown
+	isUnknown := true
+	isCompatible := true
 	for _, e := range tests {
 		if e.containsPlatformVersion(platformVersion) {
-			if e.Status == "success" {
-				return Compatible, nil
-			} else {
-				return NotCompatible, nil
+			isUnknown = false
+			if e.Status == "failure" {
+				isCompatible = false
+				break
 			}
 		}
 	}
 
-	return Unknown, fmt.Errorf("could not find compatibility tests with platform: %s for plugin %s@%s", platformVersion, pluginId, pluginVersion)
+	if isUnknown {
+		return Unknown, fmt.Errorf("could not find compatibility tests with platform: %s for plugin %s@%s", platformVersion, pluginId, pluginVersion)
+	}
+
+	if isCompatible {
+		return Compatible, nil
+	} else {
+		return NotCompatible, nil
+	}
 }
 
 func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithService(serviceName string, serviceVersion string, pluginId string, pluginVersion string, repos []PluginRepository) (Verdict, error) {

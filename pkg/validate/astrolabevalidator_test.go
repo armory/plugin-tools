@@ -68,6 +68,25 @@ func TestIncompatiblePluginWithPlatform(t *testing.T) {
 	}
 }
 
+func TestIncompatiblePluginThatOperateMultipleServicesWithPlatform(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	s := getArrayByteFromPath("test/metadata/compatibility-metadata-test.json", t)
+	httpmock.RegisterResponder("GET", "http://mock.repo/compatibility/Armory.Test.json",
+		httpmock.NewBytesResponder(200, s))
+
+	v := NewAstrolabeValidator()
+	verdict, err := v.IsPluginCompatibleWithPlatform("1.21.7", "Armory.Test", "1.0.0", repos)
+
+	if err != nil {
+		t.Errorf("method() return error: %s", err)
+	}
+	if verdict != NotCompatible {
+		t.Errorf("method() = %s but want = %s", verdict, NotCompatible)
+	}
+}
+
 func TestCompatiblePluginWithCustomPlatform(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -97,6 +116,25 @@ func TestIncompatiblePluginWithCustomPlatform(t *testing.T) {
 
 	v := NewAstrolabeValidator()
 	verdict, err := v.IsPluginCompatibleWithPlatform("2.22.1", "Armory.Test", "0.1.7", repos)
+
+	if err != nil {
+		t.Errorf("method() return error: %s", err)
+	}
+	if verdict != NotCompatible {
+		t.Errorf("method() = %s but want = %s", verdict, NotCompatible)
+	}
+}
+
+func TestIncompatiblePluginThatOperatesMultipleServicesWithCustomPlatform(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	s := getArrayByteFromPath("test/metadata/compatibility-metadata-test.json", t)
+	httpmock.RegisterResponder("GET", "http://mock.repo/compatibility/Armory.Test.json",
+		httpmock.NewBytesResponder(200, s))
+
+	v := NewAstrolabeValidator()
+	verdict, err := v.IsPluginCompatibleWithPlatform("2.22.0", "Armory.Test", "1.0.0", repos)
 
 	if err != nil {
 		t.Errorf("method() return error: %s", err)
