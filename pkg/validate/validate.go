@@ -32,12 +32,12 @@ type Plugin struct {
 }
 
 type PluginRepository struct {
-	id  string
-	url string
+	Id  string
+	Url string
 }
 
 func (r *PluginRepository) getCompatibilityMetadata(pluginId string) (*CompatibilityMetadata, error) {
-	comUrl := strings.ReplaceAll(r.url, "repositories.json", fmt.Sprintf("compatibility/%s.json", pluginId))
+	comUrl := strings.ReplaceAll(r.Url, "repositories.json", fmt.Sprintf("compatibility/%s.json", pluginId))
 	resp, err := http.Get(comUrl)
 	if err != nil {
 		return nil, err
