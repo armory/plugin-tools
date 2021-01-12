@@ -2,7 +2,6 @@ package validate
 
 import (
 	"fmt"
-	"log"
 )
 
 type AstrolabeCompatibilityValidator struct{}
@@ -11,16 +10,14 @@ func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithPlatform(platfor
 	var metadata *CompatibilityMetadata
 	for _, e := range repos {
 		m, err := e.getCompatibilityMetadata(pluginId)
-		if err != nil {
-			log.Printf("error when geting compatibility metadata: %s", err)
-		} else {
+		if err == nil {
 			metadata = m
 			break
 		}
 	}
 
 	if metadata == nil {
-		return Unknown, fmt.Errorf("compatibility metadata not found in repositories")
+		return Unknown, fmt.Errorf("compatibility metadata not found for plugin %s in repositories", pluginId)
 	}
 
 	tests, err := metadata.getCompatibilityTests(pluginVersion)
@@ -28,20 +25,24 @@ func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithPlatform(platfor
 		return Unknown, err
 	}
 
-	//At the begin, we consider the plugin as unknown
-	isUnknown := true
+	platformFound := false //this flag indicates at least one test was found for given platform
+	isUnknown := false
 	isCompatible := true
 	for _, e := range tests {
 		if e.containsPlatformVersion(platformVersion) {
-			isUnknown = false
+			platformFound = true
 			if e.Status == "failure" {
 				isCompatible = false
+				break
+			}
+			if e.Status == "unknown" {
+				isUnknown = true
 				break
 			}
 		}
 	}
 
-	if isUnknown {
+	if isUnknown || !platformFound {
 		return Unknown, fmt.Errorf("could not find compatibility tests with platform: %s for plugin %s@%s", platformVersion, pluginId, pluginVersion)
 	}
 
@@ -56,16 +57,14 @@ func (v *AstrolabeCompatibilityValidator) IsPluginCompatibleWithService(serviceN
 	var metadata *CompatibilityMetadata
 	for _, e := range repos {
 		m, err := e.getCompatibilityMetadata(pluginId)
-		if err != nil {
-			log.Printf("error message: %s", err)
-		} else {
+		if err == nil {
 			metadata = m
 			break
 		}
 	}
 
 	if metadata == nil {
-		return Unknown, fmt.Errorf("compatibility metadata not found in repositories")
+		return Unknown, fmt.Errorf("compatibility metadata not found for plugin %s in repositories", pluginId)
 	}
 
 	tests, err := metadata.getCompatibilityTests(pluginVersion)

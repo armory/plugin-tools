@@ -69,7 +69,7 @@ func (m *CompatibilityMetadata) getCompatibilityTests(pluginVersion string) ([]C
 			return m.Releases[i].Tests, nil
 		}
 	}
-	return nil, fmt.Errorf("release %s not found in compatibility metadata", pluginVersion)
+	return nil, fmt.Errorf("release %s for plugin %s not found in compatibility metadata", pluginVersion, m.Id)
 }
 
 type CompatibilityRelease struct {
